@@ -1,6 +1,9 @@
 # Brain behaviour classification: Third assignment of Deep Learning
 Repository of the first assignment of the deep learning course (University Maastricht).
 
+## Dataset
+Download the brain dataset here: https://surfdrive.surf.nl/files/index.php/s/2MbsgxYwGQjzQys and use the provided password. Extract the zip-file to the data/ folder.
+
 ## Setup
 Clone repository and initialize submodules.
 
