@@ -2,6 +2,8 @@ import argparse
 from model.brain_behaviour_classifier import BrainBehaviourClassifier
 from submodules.TimeSeriesDL.utils.config import config
 
+# some general brain information and proposed models: https://arxiv.org/pdf/2201.04229.pdf
+
 config.register_model("BrainBehaviourClassifier", BrainBehaviourClassifier)
 
 
@@ -14,4 +16,4 @@ if __name__ == "__main__":
     if args.config:
         pass
     else:
-        raise argparse.ArgumentError("Config file not set. Use '--config <path_to_file>' to load a configuration.")
+        raise ValueError("Config file not set. Use '--config <path_to_file>' to load a configuration.")
