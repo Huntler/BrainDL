@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from matplotlib.image import AxesImage
 import numpy as np
 
-from data.read_file import get_dataset_matrix
+from read_file import get_dataset_matrix
 
 
 def reshape_matrix(matrix: np.array) -> np.array:
@@ -88,4 +88,20 @@ if __name__ == "__main__":
     matrix_3 = get_dataset_matrix(path)
     
     plot_matrices(matrices=[matrix_0, matrix_1, matrix_2, matrix_3], names=["Rest", "Math", "Memory", "Motor"])
+    plt.show()
+
+    # showing different chunks of the same class
+    path = "data/Data_Ass3/Intra/train/task_motor_105923_1.h5"
+    matrix_0 = get_dataset_matrix(path)
+
+    path = "data/Data_Ass3/Intra/train/task_motor_105923_2.h5"
+    matrix_1 = get_dataset_matrix(path)
+
+    path = "data/Data_Ass3/Intra/train/task_motor_105923_3.h5"
+    matrix_2 = get_dataset_matrix(path)
+
+    path = "data/Data_Ass3/Intra/train/task_motor_105923_4.h5"
+    matrix_3 = get_dataset_matrix(path)
+    
+    plot_matrices(matrices=[matrix_0, matrix_1, matrix_2, matrix_3], names=["Chunk 1", "Chunk 2", "Chunk 3", "Chunk 4"])
     plt.show()
