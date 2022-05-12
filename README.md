@@ -3,7 +3,9 @@ Repository of the first assignment of the deep learning course (University Maast
 
 ## Setup
 Clone repository and initialize submodules.
+
 ```$ git clone git@github.com:Huntler/BrainDL.git```
+
 ```$ git submodule init```
 
 Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) on your system and execute the follwing command afterwards.
