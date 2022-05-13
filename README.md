@@ -21,6 +21,10 @@ After installation, the environment can be activated by calling
 
 ```$ conda activate dl-1```
 
+This time, we also need to use h5py, to install this library call
+
+```$ conda install h5py```
+
 ## Usage
 ### Training
 This program uses configuration files to set program arguments and deep learning hyperparameters. To configure a file, have a look at the default files located in ```config/```. To start a training, call the following command (the config file path might differ)
