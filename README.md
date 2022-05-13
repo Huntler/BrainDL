@@ -11,6 +11,8 @@ Clone repository and initialize submodules.
 
 ```$ git submodule init```
 
+```$ git submodule update```
+
 Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) on your system and execute the follwing command afterwards.
 
 ```$ conda env create -f submodules/TimeSeriesDL/requirements/environment.yml```
@@ -18,6 +20,10 @@ Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) on your syst
 After installation, the environment can be activated by calling 
 
 ```$ conda activate dl-1```
+
+This time, we also need to use h5py, to install this library call
+
+```$ conda install h5py```
 
 ## Usage
 ### Training
