@@ -11,6 +11,8 @@ Clone repository and initialize submodules.
 
 ```$ git submodule init```
 
+```$ git submodule update```
+
 Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) on your system and execute the follwing command afterwards.
 
 ```$ conda env create -f submodules/TimeSeriesDL/requirements/environment.yml```
