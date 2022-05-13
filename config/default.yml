@@ -1,0 +1,15 @@
+device: cpu
+dataset_args:
+  d_type: train
+  task_dir: ./data/data/Intra
+  task_type: Intra
+  normalize: True
+  bounds: [0, 1]
+  sequence_length: 100
+  future_steps: 1
+dataloader_args:
+  num_workers: 0
+  batch_size: 20
+  shuffle: False
+train_epochs: 30
+evaluation: None 
