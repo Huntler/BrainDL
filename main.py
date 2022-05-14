@@ -37,6 +37,11 @@ def train():
     trainset, valset = torch.utils.data.random_split(dataset, split_sizes)
     trainloader = DataLoader(trainset, **config_dict["dataloader_args"])
     valloader = DataLoader(valset, **config_dict["dataloader_args"])
+
+
+    dataiter = iter(trainloader)
+    data = next(dataiter)
+
     
 
 def testing():
@@ -54,18 +59,17 @@ def visualize_data():
     
     # TODO: normalization + downsampling + sequencing
 
-    time_steps = 10
-    # Get 2D meshes for 10 time steps -> sequencing stuff
+    time_steps = 50
+    # Get 2D meshes for N time steps
     meshes = get_meshes(matrix, time_steps)
-
     from matplotlib.animation import FuncAnimation
     fig, ax = plt.subplots()
     def update(i):
         H  = meshes[:,:, i]
-        ax.imshow(H)
+        ax.imshow(H, interpolation='none')
         ax.set_axis_off()
     
-    anim = FuncAnimation(fig, update, frames=time_steps, interval=50)
+    anim = FuncAnimation(fig, update, frames=time_steps, interval=200)
     plt.show()
 
 

@@ -5,6 +5,7 @@ dataset_args:
   task_type: Intra
   normalize: True
   global_normalization: True,
+  zscore_normalization: False,
   downsampling: 1.0
   bounds: [0, 1]
   sequence_length: 100

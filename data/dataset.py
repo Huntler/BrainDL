@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import scipy.io
 import torch
 import numpy as np
@@ -15,7 +15,9 @@ from .utils import get_dataset_matrix, get_meshes
 class BrainDataset(torch.utils.data.Dataset):
     def __init__(self, d_type: str = "train", normalize: bool = True, bounds: Tuple[int] = (0, 1),
                 future_steps: int= 1, sequence_length: int = 1, precision: np.dtype = np.float32,
-                task_dir: str = "./data/data/Intra", task_type: str="Intra", global_normalization: bool = True, 
+                task_dir: str = "./data/data/Intra", task_type: str="Intra", 
+                global_normalization: bool = True, 
+                zscore_normalization: bool = False,
                 downsampling: int = 1.0):
         super(BrainDataset, self).__init__()
 
@@ -44,21 +46,22 @@ class BrainDataset(torch.utils.data.Dataset):
 
         self.normalize = normalize
         self.global_normalization = global_normalization
+        self.zscore_normalization = zscore_normalization
         self.downsampling = downsampling
 
         # normalize the dataset between values of o to 1
         self._scaler = None
         if self.normalize:
-            self._scaler = MinMaxScaler(feature_range=bounds)
+            if self.zscore_normalization:
+                self._scaler = StandardScaler()
+            else:
+                self._scaler = MinMaxScaler(feature_range=bounds)
 
         '''
         # load the dataset specified
-        self._mat = scipy.io.loadmat(self._file).get(f"X{d_type}")
         self._mat = self._mat.astype(self._precision)
 
-            self._scaler.fit(self._mat)
             self._mat = self. _scaler.transform(self._mat)
-
         '''
 
 
@@ -70,15 +73,55 @@ class BrainDataset(torch.utils.data.Dataset):
         return len(self.files)
 
 
-            
+    
+    def normalize_globally(self,matrix):
+        # Normalize all cells together throughout all time steps
+        # with either MinMax or Standard scaler
+        # Shape of matrix is (248, 35624) -> 248 rows for each sensor and 35624 time steps
+
+        #print(f'Normalizing globally matrix of shape {matrix.shape}')
+
+        # scaler scales each feature/column so we have to convert matrix to 1D
+        # to scale based on all sensors in all time steps together
+        shape = matrix.shape
+        matrix = matrix.reshape((shape[0]*shape[1], 1))
+        
+        self._scaler.fit(matrix)
+        self._scaler.transform(matrix)
+
+        matrix = matrix.reshape(shape)
+
+        return matrix
+
+    def normalize_locally(self,matrix):
+        # Normalize each cell individually throughout all time steps
+        # with either MinMax or Standard scaler
+        # Shape of matrix is (248, 35624) -> 248 rows for each sensor and 35624 time steps
+
+        #print(f'Normalizing locally matrix of shape {matrix.shape}')
+
+        matrix = matrix.transpose() # scaler scales each feature/column so we have to transpose to 
+                                    # scale each sensor individually
+        self._scaler.fit(matrix)
+        self._scaler.transform(matrix)
+
+        matrix = matrix.transpose()
+        return matrix
+
 
     def __getitem__(self, index):
+        # TODO: downsampling + sequencing
+
         file = self.files[index]
         matrix = get_dataset_matrix(file)
-        
+        matrix = matrix.astype(self._precision)
 
-        # TODO: normalization + downsampling + sequencing
-
+        # Normalization/Standardization
+        if self.normalize:
+            if self.global_normalization:
+                matrix = self.normalize_globally(matrix)
+            else:
+                matrix = self.normalize_locally(matrix)
 
         time_steps = 10
         # Get 2D meshes for 10 time steps -> sequencing stuff
