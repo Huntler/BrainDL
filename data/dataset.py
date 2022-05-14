@@ -18,7 +18,7 @@ class BrainDataset(torch.utils.data.Dataset):
                 task_dir: str = "./data/data/Intra", task_type: str="Intra", 
                 global_normalization: bool = True, 
                 zscore_normalization: bool = False,
-                downsampling: int = 1.0):
+                downsampling: bool = False, downsample_by: float = 0.5):
         super(BrainDataset, self).__init__()
 
         self._precision = precision
@@ -47,7 +47,9 @@ class BrainDataset(torch.utils.data.Dataset):
         self.normalize = normalize
         self.global_normalization = global_normalization
         self.zscore_normalization = zscore_normalization
+
         self.downsampling = downsampling
+        self.downsample_by = downsample_by
 
         # normalize the dataset between values of o to 1
         self._scaler = None
@@ -93,7 +95,6 @@ class BrainDataset(torch.utils.data.Dataset):
         self._scaler.transform(matrix)
 
         matrix = matrix.reshape(shape)
-
         return matrix
 
     def normalize_locally(self,matrix):
@@ -111,6 +112,21 @@ class BrainDataset(torch.utils.data.Dataset):
         matrix = matrix.transpose()
         return matrix
 
+    def downsample(self, matrix):
+        # Downsample the matrix by just deleting columns on a uniform distribution
+        shape = matrix.shape
+        time_steps = shape[1]
+
+        if self.downsample_by > 1.0:
+            print(f'downsample_by must be between 0 and 1!')
+            return
+
+        num_of_samples = int(self.downsample_by * time_steps)
+        
+        to_delete = np.linspace(0,time_steps-1,num_of_samples, dtype=int)
+        matrix  = np.delete(matrix, to_delete, axis=1)
+
+        return matrix
 
     def __getitem__(self, index):
         # TODO: downsampling + sequencing
@@ -118,6 +134,10 @@ class BrainDataset(torch.utils.data.Dataset):
         file = self.files[index]
         matrix = get_dataset_matrix(file)
         matrix = matrix.astype(self._precision)
+
+        # Downsampling
+        if self.downsampling:
+            matrix = self.downsample(matrix)
 
         # Normalization/Standardization
         if self.normalize:
@@ -130,15 +150,6 @@ class BrainDataset(torch.utils.data.Dataset):
         # Get 2D meshes for 10 time steps -> sequencing stuff
         meshes = get_meshes(matrix, time_steps)
 
-        # normalization 
-        '''
-        if self.normalize:
-            self._scaler.fit(self._mat)
-            self._mat = self. _scaler.transform(self._mat)        
-        '''
-
-        #X,y = preprocess_data_type(self._mat, 10,1) 
-        #y = y*get_file_label(file)
 
         x = np.swapaxes(meshes, 0, 2)
         x = x.astype(self._precision)

@@ -4,9 +4,10 @@ dataset_args:
   task_dir: ./data/data/Intra
   task_type: Intra
   normalize: True
-  global_normalization: True,
-  zscore_normalization: False,
-  downsampling: 1.0
+  global_normalization: True
+  zscore_normalization: False
+  downsampling: False
+  downsample_by: 0.1
   bounds: [0, 1]
   sequence_length: 100
   future_steps: 1
