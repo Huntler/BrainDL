@@ -4,6 +4,8 @@ dataset_args:
   task_dir: ./data/data/Intra
   task_type: Intra
   normalize: True
+  global_normalization: True,
+  downsampling: 1.0
   bounds: [0, 1]
   sequence_length: 100
   future_steps: 1

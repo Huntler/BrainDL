@@ -28,14 +28,16 @@ def train():
     # load the data, normalize them and convert them to tensor
     dataset = BrainDataset(**config_dict["dataset_args"])
 
-    '''
+    print(len(dataset))
+    
     split_sizes = [int(math.ceil(len(dataset) * 0.8)), int(math.floor(len(dataset) * 0.2))]
+    
     
     trainset, valset = torch.utils.data.random_split(dataset, split_sizes)
     trainloader = DataLoader(trainset, **config_dict["dataloader_args"])
     valloader = DataLoader(valset, **config_dict["dataloader_args"])
     
-    '''
+   
 
 
 

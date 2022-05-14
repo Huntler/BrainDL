@@ -6,6 +6,7 @@ import numpy as np
 import os
 import h5py
 
+from .utils import preprocess_data_type, get_file_label, get_dataset_matrix
 
 # the dataset has t time steps recorded with 248 features at each sample
 # I would normalize each feature on its own and not all 248 together
@@ -14,13 +15,13 @@ import h5py
 class BrainDataset(torch.utils.data.Dataset):
     def __init__(self, d_type: str = "train", normalize: bool = True, bounds: Tuple[int] = (0, 1),
                 future_steps: int= 1, sequence_length: int = 1, precision: np.dtype = np.float32,
-                task_dir: str = "./data/data/Intra", task_type: str="Intra"):
+                task_dir: str = "./data/data/Intra", task_type: str="Intra", global_normalization: bool = True, 
+                downsampling: int = 1.0):
         super(BrainDataset, self).__init__()
 
         self._precision = precision
         self._seq = sequence_length
         self._f_seq = future_steps
-
 
         # Get all directories of d_type in task_dir
         dirs = []
@@ -32,16 +33,22 @@ class BrainDataset(torch.utils.data.Dataset):
         # Get all file paths
         self.files = []
         for d in dirs:
+            if d_type not in d:
+                continue
             for f in os.listdir(d):
                 p = os.path.join(d,f)
                 self.files.append(os.path.abspath(p))
 
         self._mat = None
 
+
         self.normalize = normalize
+        self.global_normalization = global_normalization
+        self.downsampling = downsampling
+
         # normalize the dataset between values of o to 1
         self._scaler = None
-        if normalize:
+        if self.normalize:
             self._scaler = MinMaxScaler(feature_range=bounds)
 
         '''
@@ -53,17 +60,6 @@ class BrainDataset(torch.utils.data.Dataset):
             self._mat = self. _scaler.transform(self._mat)
 
         '''
-    def __get_dataset_name(self,file_name_with_dir: str) -> str:
-        filename_without_dir = file_name_with_dir.split('/')[-1]
-        temp = filename_without_dir.split('_')[:-1]
-        dataset_name = "_".join(temp)
-        return dataset_name
-
-    def get_dataset_matrix(self,file_path: str) -> np.array:
-        with h5py.File(file_path,'r') as f:
-            dataset_name = self.__get_dataset_name(file_path)
-            matrix = f.get(dataset_name)[()]
-            return matrix
 
 
     def scale_back(self, data):
@@ -73,29 +69,34 @@ class BrainDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.files)
 
-    
-    def get_file_label(self,file):
-        name = os.path.basename(file)
-        if "rest" in name:
-            return 0
-        elif "task_motor" in name:
-            return 1
-        elif "task_story" in name:
-            return 2
-        else:
-            return 3
+
             
 
     def __getitem__(self, index):
-        self._mat = self.get_dataset_matrix(self.files[index])
+        file = self.files[index]
 
+        input_channels = 248 #MEG channels
+        window_size = 10
+        depth= 1
+
+        mat = np.random.rand(input_channels,1)
+        data_mat = get_dataset_matrix(file)
+
+        self._mat = np.column_stack((mat, data_mat))
+        mat = None
+        data_mat = None
+        
+        # TODO: normalization + downsampling + sequencing
+        # normalization 
+        '''
         if self.normalize:
             self._scaler.fit(self._mat)
-            self._mat = self. _scaler.transform(self._mat)
+            self._mat = self. _scaler.transform(self._mat)        
+        '''
 
-        X = self._mat
+        X,y = preprocess_data_type(self._mat, window_size,depth) 
+        y = y*get_file_label(file)
 
-        label = self.get_file_label(self.files[index])
+        return X,y
 
-        y = np.full(X.shape[0], label)
-        return X, y
+
