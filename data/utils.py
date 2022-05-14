@@ -43,45 +43,18 @@ def closestNumber(n, m) :
         return n1 
     return n2 
 
-
-def preprocess_data_type(matrix, window_size,depth):
+def get_meshes(matrix, time_steps=1):
+    input_rows = 20
+    input_columns = 21
+    length = time_steps
     input_channels = 248
 
-    if(matrix.shape[1] == 1):
-        length = 1
-    else:
-        length = closestNumber(int(matrix.shape[1]) - window_size*depth,window_size*depth)
-        
-    matrices = np.zeros((input_channels,length),dtype=np.float64)
+    meshes = np.zeros((input_rows,input_columns,length),dtype=np.float64)
     for i in range(length):
-        matrix_step=np.reshape(matrix[:,i],(1,input_channels))
-        matrices[:,i] = matrix_step
-    
-    del matrix
-
-    inputs = []
-    if length == 1:
-        for i in range(window_size):
-            inputs.append(np.zeros((0,input_channels,depth)))
-    else:      
-        var = int(window_size*depth/2)    # difference between values in columns
-        var2 = int((length-window_size*depth/2)/var) # number of rows
-
-        for j in range(var2):
-            if j == 0:
-                for i in range(window_size):
-                    inputs.append(np.zeros((var2,input_channels,depth)))
-                    inputs[i][j] = matrices[:,i*depth:(i+1)*depth]
-            else:
-                for i in range(window_size):
-                    inputs[i][j] = matrices[:,var*j+i*depth:var*j+(i+1)*depth]
-
-    del matrices
-    gc.collect()
-
-    number_y_labels = int((length/(window_size*depth)*2)-1)
-    y = np.ones((number_y_labels,1),dtype=np.int8)
-    return inputs, y
+        array_time_step = np.reshape(matrix[:,i],(1,input_channels))
+        arr_mesh = array_to_mesh(array_time_step)
+        meshes[:,:,i] = arr_mesh
+    return meshes
 
 
 def array_to_mesh(arr):    

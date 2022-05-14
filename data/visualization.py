@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from matplotlib.image import AxesImage
 import numpy as np
 
-from read_file import get_dataset_matrix
+from .utils import get_dataset_matrix
 
 
 def reshape_matrix(matrix: np.array) -> np.array:

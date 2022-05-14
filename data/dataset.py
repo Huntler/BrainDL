@@ -6,7 +6,7 @@ import numpy as np
 import os
 import h5py
 
-from .utils import preprocess_data_type, get_file_label, get_dataset_matrix
+from .utils import get_dataset_matrix, get_meshes
 
 # the dataset has t time steps recorded with 248 features at each sample
 # I would normalize each feature on its own and not all 248 together
@@ -74,19 +74,16 @@ class BrainDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         file = self.files[index]
-
-        input_channels = 248 #MEG channels
-        window_size = 10
-        depth= 1
-
-        mat = np.random.rand(input_channels,1)
-        data_mat = get_dataset_matrix(file)
-
-        self._mat = np.column_stack((mat, data_mat))
-        mat = None
-        data_mat = None
+        matrix = get_dataset_matrix(file)
         
+
         # TODO: normalization + downsampling + sequencing
+
+
+        time_steps = 10
+        # Get 2D meshes for 10 time steps -> sequencing stuff
+        meshes = get_meshes(matrix, time_steps)
+
         # normalization 
         '''
         if self.normalize:
@@ -94,9 +91,9 @@ class BrainDataset(torch.utils.data.Dataset):
             self._mat = self. _scaler.transform(self._mat)        
         '''
 
-        X,y = preprocess_data_type(self._mat, window_size,depth) 
-        y = y*get_file_label(file)
+        #X,y = preprocess_data_type(self._mat, 10,1) 
+        #y = y*get_file_label(file)
 
-        return X,y
+        return meshes
 
 
