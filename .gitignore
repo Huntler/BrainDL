@@ -2,7 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,macos,windows,linux
 
-data/Data_Ass3/*
+data/data/*
+data/*.zip
 
 # vs code
 .vscode

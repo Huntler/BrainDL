@@ -25,10 +25,6 @@ def train():
     device = config_dict["device"]
     precision = torch.float16 if device == "cuda" else torch.float32
 
-    freeze_support()
-
-    future_steps = config_dict["dataset_args"]["future_steps"]
-
     # load the data, normalize them and convert them to tensor
     dataset = BrainDataset(**config_dict["dataset_args"])
     
@@ -37,7 +33,13 @@ def train():
     trainset, valset = torch.utils.data.random_split(dataset, split_sizes)
     trainloader = DataLoader(trainset, **config_dict["dataloader_args"])
     valloader = DataLoader(valset, **config_dict["dataloader_args"])
-    
+
+    model = BrainBehaviourClassifier()
+    model.use_device(device)
+
+    model.train(trainloader, epochs=500, two_loss_functions=True)
+    model.validate(valloader)
+        
 
 def testing():
     # create a dummy input
@@ -69,8 +71,8 @@ def visualize_data():
     plt.show()
 
 
-
 if __name__ == "__main__":    
+    freeze_support()
     parser = argparse.ArgumentParser(description="This program trains and tests a deep " + 
                                      "learning model to detect a behaviour based on brain data")
     parser.add_argument("--config", dest="config", help="Set path to config file.")

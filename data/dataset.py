@@ -6,7 +6,7 @@ import numpy as np
 import os
 import h5py
 
-from .utils import get_dataset_matrix, get_meshes
+from .utils import get_dataset_matrix, get_file_label, get_meshes
 
 # the dataset has t time steps recorded with 248 features at each sample
 # I would normalize each feature on its own and not all 248 together
@@ -66,11 +66,13 @@ class BrainDataset(torch.utils.data.Dataset):
         data = np.array(data, dtype=self._precision)
         return self._scaler.inverse_transform(data)
 
+    def __onehot_ecnode(self, n: int) -> np.array:
+        onehot = np.zeros((4, ), self._precision)
+        onehot[n] = 1
+        return onehot
+
     def __len__(self):
         return len(self.files)
-
-
-            
 
     def __getitem__(self, index):
         file = self.files[index]
@@ -94,6 +96,11 @@ class BrainDataset(torch.utils.data.Dataset):
         #X,y = preprocess_data_type(self._mat, 10,1) 
         #y = y*get_file_label(file)
 
-        return meshes
+        x = np.swapaxes(meshes, 0, 2)
+        x = x.astype(self._precision)
+        y = self.__onehot_ecnode(get_file_label(file))
+        y = y[np.newaxis, :]
+        y = np.repeat(y, time_steps, axis=0)
+        return x, y
 
 
