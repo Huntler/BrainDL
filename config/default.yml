@@ -1,4 +1,4 @@
-device: cpu
+device: cuda
 dataset_args:
   d_type: train
   task_dir: ./data/data/Intra
@@ -12,7 +12,7 @@ dataset_args:
   future_steps: 1
 dataloader_args:
   num_workers: 0
-  batch_size: 20
-  shuffle: False
+  batch_size: 256
+  shuffle: True
 train_epochs: 30
 evaluation: None 
