@@ -1,9 +1,11 @@
 import numpy as np
 import gc
+import os
+import h5py
 
 
     
-def get_file_label(self,file):
+def get_file_label(file):
     name = os.path.basename(file)
     if "rest" in name:
         return 0
@@ -22,7 +24,7 @@ def __get_dataset_name(file_name_with_dir: str) -> str:
 
 def get_dataset_matrix(file_path: str) -> np.array:
     with h5py.File(file_path,'r') as f:
-        dataset_name = self.__get_dataset_name(file_path)
+        dataset_name = __get_dataset_name(file_path)
         matrix = f.get(dataset_name)
         matrix = np.array(matrix)
         return matrix
