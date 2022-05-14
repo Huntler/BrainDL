@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Tuple
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 import torch
 from submodules.TimeSeriesDL.model.base_model import BaseModel
@@ -52,6 +53,9 @@ class BrainBehaviourClassifier(BaseModel):
         self.__sample_position = 0
 
     def train(self, loader: DataLoader, epochs: int = 1, two_loss_functions: bool = False) -> None:
+        dev_name = self._device_name if self._device == "cuda" else "CPU"
+        print(f"Starting training on {dev_name}")
+
         for epoch in tqdm(range(epochs)):
             for x, y in loader:
                 x = x.to(self._device)
@@ -75,13 +79,18 @@ class BrainBehaviourClassifier(BaseModel):
                 self.__sample_position += x.size(0)
 
     def validate(self, loader: DataLoader) -> None:
-        position = 0
+        losses = []
         for x, y in loader:
+            x = x.to(self._device)
+            y = y.to(self._device)
+
             cnn_y, lstm_y = self(x)
             loss = self.__l_2(lstm_y, y)
-            self._writer.add_scalar(
-                "Validation/loss", loss, position)
-            position += x.size(0)
+            losses.append(loss.detach().cpu().item())
+
+        losses = np.array(losses)
+        self._writer.add_scalar(
+            "Validation/loss", np.mean(losses), self.__sample_position)
 
 
     

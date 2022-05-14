@@ -1,4 +1,4 @@
-device: cpu
+device: cuda
 dataset_args:
   d_type: train
   task_dir: ./data/data/Intra
