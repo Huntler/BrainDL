@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from data.dataset import BrainDataset
 
+from data.utils import get_dataset_matrix, get_meshes
+
 # some general brain information and proposed models: https://arxiv.org/pdf/2201.04229.pdf
 
 config.register_model("BrainBehaviourClassifier", BrainBehaviourClassifier)
@@ -46,25 +48,25 @@ def testing():
     out = model(x)
 
 
-def plot_matrix(matrix):
-    H = np.array(matrix)
-    plt.imshow(H, interpolation='none')
-    plt.show()
-
-
 def visualize_data():
-    # load the data, normalize them and convert them to tensor
-    dataset = BrainDataset(**config_dict["dataset_args"])
-    print(f'Dataset length: {len(dataset)}')
+    file = "./data/data/Intra/train/rest_105923_1.h5"
+    matrix = get_dataset_matrix(file)
+    
+    # TODO: normalization + downsampling + sequencing
 
-    dataloader = DataLoader(dataset, **config_dict["dataloader_args"])
+    time_steps = 10
+    # Get 2D meshes for 10 time steps -> sequencing stuff
+    meshes = get_meshes(matrix, time_steps)
 
-    dataiter = iter(dataloader)
-    data = dataiter.next()
-
-
-    mat = data[0,:,:,0]
-    plot_matrix(mat)
+    from matplotlib.animation import FuncAnimation
+    fig, ax = plt.subplots()
+    def update(i):
+        H  = meshes[:,:, i]
+        ax.imshow(H)
+        ax.set_axis_off()
+    
+    anim = FuncAnimation(fig, update, frames=time_steps, interval=50)
+    plt.show()
 
 
 
