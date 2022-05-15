@@ -116,7 +116,7 @@ class BrainBehaviourClassifier(BaseModel):
         batch_size, seq_size, dim_1, dim_2 = x.shape
 
         # forward passing into the CNN build of 3 Conv layers
-        new_x = torch.empty((batch_size, seq_size, 32, 9, 8), device=self._device)
+        new_x = torch.empty((batch_size, seq_size, 32, 8, 9), device=self._device)
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = self.__conv_1(x_t)
             #x_t = self.__conv_1_bn(x_t)
@@ -125,7 +125,7 @@ class BrainBehaviourClassifier(BaseModel):
 
         x = new_x
 
-        new_x = torch.empty((batch_size, seq_size, 64, 3, 2), device=self._device)
+        new_x = torch.empty((batch_size, seq_size, 64, 2, 3), device=self._device)
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = torch.flatten(x_t, 0, 1)
             x_t = self.__conv_2(x_t)

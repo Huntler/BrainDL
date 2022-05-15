@@ -43,8 +43,7 @@ def train():
     for i in range(3):
         model.learn(trainloader, epochs=5)
         model.validate(valloader)
-
-    print(f"Accuracy after training: {model.accuracy(valloader)}")
+        print(f"Accuracy after training: {model.accuracy(valloader)}")
 
 
 def testing():

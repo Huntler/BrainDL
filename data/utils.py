@@ -49,11 +49,11 @@ def get_meshes(matrix, start_index, time_steps):
     length = time_steps
     input_channels = 248
 
-    meshes = np.zeros((input_rows,input_columns,length),dtype=np.float64)
+    meshes = np.zeros((length,input_rows,input_columns),dtype=np.float64)
     for i in range(length):
         array_time_step = np.reshape(matrix[:,start_index+i],(1,input_channels))
         arr_mesh = array_to_mesh(array_time_step)
-        meshes[:,:,i] = arr_mesh
+        meshes[i,:,:] = arr_mesh
     return meshes
 
 
