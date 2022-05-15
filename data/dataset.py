@@ -209,9 +209,8 @@ class BrainDataset(torch.utils.data.Dataset):
 
         x = np.swapaxes(meshes, 0, 2)
         x = x.astype(self._precision)
-        y = self.__onehot_ecnode(self.labels[mat_index])
-        y = y[np.newaxis, :]
-        y = np.repeat(y, self._seq, axis=0)
+        # y = self.__onehot_ecnode(self.labels[mat_index])
+        y = np.array([self.labels[mat_index]], dtype=np.uint8)
         return x, y
 
 

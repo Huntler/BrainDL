@@ -6,14 +6,14 @@ dataset_args:
   normalize: True
   global_normalization: False
   zscore_normalization: True
-  downsampling: False
-  downsample_by: 0.1
+  downsampling: True
+  downsample_by: 0.5
   bounds: [0, 1]
-  sequence_length: 61
+  sequence_length: 244
   future_steps: 1
 dataloader_args:
-  num_workers: 0
-  batch_size: 4
+  num_workers: 8
+  batch_size: 64
   shuffle: True
 train_epochs: 30
 evaluation: None 

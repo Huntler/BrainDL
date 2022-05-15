@@ -38,11 +38,11 @@ def train():
     model = BrainBehaviourClassifier()
     model.use_device(device)
 
-    model.train(trainloader, epochs=50, two_loss_functions=True)
-    model.validate(valloader)
-
-    model.train(trainloader, epochs=50, two_loss_functions=False)
-    model.validate(valloader)
+    # model.train(trainloader, epochs=5, two_loss_functions=True)
+    # model.validate(valloader)
+    for i in range(3):
+        model.learn(trainloader, epochs=5)
+        model.validate(valloader)
 
 
 def testing():

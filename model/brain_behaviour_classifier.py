@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Tuple
+from unicodedata import bidirectional
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 import torch
@@ -27,49 +28,44 @@ class BrainBehaviourClassifier(BaseModel):
 
         # first part of the neural network is CNN only which tries to predict
         # one of the 4 classes without taking a sequence into account
-        self.__conv_1 = torch.nn.Conv2d(1, 32, 3, 1, 0)
+        self.__conv_1 = torch.nn.Conv2d(1, 32, 5, 2, 0)
         self.__conv_1_bn = torch.nn.BatchNorm2d(32, track_running_stats=False)
 
-        self.__conv_2 = torch.nn.Conv2d(32, 64, 3, 1, 0)
+        self.__conv_2 = torch.nn.Conv2d(32, 64, 5, 2, 0)
         self.__conv_2_bn = torch.nn.BatchNorm2d(64, track_running_stats=False)
 
-        self.__conv_3 = torch.nn.Conv1d(64, 128, 9, 1, 0)
+        self.__conv_3 = torch.nn.Conv1d(64, 128, 6, 1, 0)
         self.__conv_3_bn = torch.nn.BatchNorm1d(128, track_running_stats=False)
 
         self.__linear_1 = torch.nn.Linear(128, 64)
         self.__linear_2 = torch.nn.Linear(64, 4)
 
-        self.__l_1 = torch.nn.BCELoss()
-
         # second part of the neural network is a LSTM which takes the previous
         # output as an input and tries to predict one of the 4 classes with
         # taking the sequence into account
-        self.__lstm = torch.nn.LSTM(4, 32, batch_first=True)
+        self.__lstm = torch.nn.LSTM(4, 32, num_layers=8, dropout=0.2, bidirectional=False, batch_first=True)
         self.__linear_3 = torch.nn.Linear(32, 4)
 
-        self.__l_2 = torch.nn.BCELoss()
+        self.__loss_func = torch.nn.CrossEntropyLoss()
         self._optim = torch.optim.AdamW(self.parameters(), lr=lr, betas=adam_betas)
         self._scheduler = ExponentialLR(self._optim, gamma=lr_decay)
         self.__sample_position = 0
 
-    def train(self, loader: DataLoader, epochs: int = 1, two_loss_functions: bool = False) -> None:
+    def learn(self, loader: DataLoader, epochs: int = 1) -> None:
         dev_name = self._device_name if self._device == "cuda" else "CPU"
         print(f"Starting training on {dev_name}")
 
+        self.train()
         for epoch in tqdm(range(epochs)):
             for x, y in loader:
                 x = x.to(self._device)
                 y = y.to(self._device)
 
-                cnn_y, lstm_y = self(x)
+                _y = self(x)
+                y = torch.flatten(y)
+                loss = self.__loss_func(_y, y)
 
                 self._optim.zero_grad()
-                loss = self.__l_2(lstm_y, y)
-
-                if two_loss_functions:
-                    cnn_loss = self.__l_1(cnn_y, y)
-                    loss = loss + cnn_loss
-
                 loss.backward()
                 self._optim.step()
 
@@ -78,14 +74,22 @@ class BrainBehaviourClassifier(BaseModel):
 
                 self.__sample_position += x.size(0)
 
+            # if there is an adaptive learning rate (scheduler) available
+            if self._scheduler:
+                self._scheduler.step()
+                lr = self._scheduler.get_last_lr()[0]
+                self._writer.add_scalar("Train/learning_rate", lr, epoch)
+
+
     def validate(self, loader: DataLoader) -> None:
         losses = []
         for x, y in loader:
             x = x.to(self._device)
             y = y.to(self._device)
 
-            cnn_y, lstm_y = self(x)
-            loss = self.__l_2(lstm_y, y)
+            _y = self(x)
+            y = torch.flatten(y)
+            loss = self.__loss_func(_y, y)
             losses.append(loss.detach().cpu().item())
 
         losses = np.array(losses)
@@ -97,25 +101,22 @@ class BrainBehaviourClassifier(BaseModel):
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
         batch_size, seq_size, dim_1, dim_2 = x.shape
 
-        # forward passing into the CNN build of 3 Conv layers and 2 
-        # max pooling layers
-        new_x = torch.empty((batch_size, seq_size, 32, 9, 9), device=self._device)
+        # forward passing into the CNN build of 3 Conv layers
+        new_x = torch.empty((batch_size, seq_size, 32, 9, 8), device=self._device)
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = self.__conv_1(x_t)
             x_t = self.__conv_1_bn(x_t)
             x_t = torch.relu(x_t)
-            x_t = torch.max_pool2d(x_t, 2)
             new_x[:, i] = x_t
 
         x = new_x
 
-        new_x = torch.empty((batch_size, seq_size, 64, 3, 3), device=self._device)
+        new_x = torch.empty((batch_size, seq_size, 64, 3, 2), device=self._device)
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = torch.flatten(x_t, 0, 1)
             x_t = self.__conv_2(x_t)
             x_t = self.__conv_2_bn(x_t)
             x_t = torch.relu(x_t)
-            x_t = torch.max_pool2d(x_t, 2)
             new_x[:, i] = x_t
 
         x = torch.flatten(new_x, -2, -1)
@@ -131,18 +132,18 @@ class BrainBehaviourClassifier(BaseModel):
         x = self.__linear_1(x)
         x = torch.relu(x)
         x = self.__linear_2(x)
-        cnn_out = torch.sigmoid(x)
+        cnn_out = torch.softmax(x, dim=-1)
         
         # forward passing the CNN output into the LSTM and try to classify the
         # whole sequence
-        hidden = (torch.rand(1, batch_size, 32, device=self._device), 
-                  torch.rand(1, batch_size, 32, device=self._device))
-        x, hidden = self.__lstm(cnn_out, hidden)
-        # x = x[:, -1]
+        hidden = (torch.zeros(8, batch_size, 32, device=self._device), 
+                  torch.zeros(8, batch_size, 32, device=self._device))
+        x, hidden = self.__lstm(cnn_out)
+        x = x[:, -1]
         # x = torch.unsqueeze(x, 1)
 
         x = self.__linear_3(x)
-        lstm_out = torch.sigmoid(x)
+        lstm_out = torch.softmax(x, dim=-1)
 
         # returns output of CNN and LSTM
-        return cnn_out, lstm_out
+        return lstm_out
