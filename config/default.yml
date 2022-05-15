@@ -9,7 +9,7 @@ dataset_args:
   downsampling: False
   downsample_by: 0.1
   bounds: [0, 1]
-  sequence_length: 100
+  sequence_length: 61
   future_steps: 1
 dataloader_args:
   num_workers: 0
