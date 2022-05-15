@@ -28,18 +28,18 @@ class BrainBehaviourClassifier(BaseModel):
         # first part of the neural network is CNN only which tries to predict
         # one of the 4 classes without taking a sequence into account
         self.__conv_1 = torch.nn.Conv2d(1, 32, 3, 1, 0)
-        self.__conv_1_bn = torch.nn.BatchNorm2d(32)
+        self.__conv_1_bn = torch.nn.BatchNorm2d(32, track_running_stats=False)
 
         self.__conv_2 = torch.nn.Conv2d(32, 64, 3, 1, 0)
-        self.__conv_2_bn = torch.nn.BatchNorm2d(64)
+        self.__conv_2_bn = torch.nn.BatchNorm2d(64, track_running_stats=False)
 
         self.__conv_3 = torch.nn.Conv1d(64, 128, 9, 1, 0)
-        self.__conv_3_bn = torch.nn.BatchNorm1d(128)
+        self.__conv_3_bn = torch.nn.BatchNorm1d(128, track_running_stats=False)
 
         self.__linear_1 = torch.nn.Linear(128, 64)
         self.__linear_2 = torch.nn.Linear(64, 4)
 
-        self.__l_1 = torch.nn.CrossEntropyLoss()
+        self.__l_1 = torch.nn.BCELoss()
 
         # second part of the neural network is a LSTM which takes the previous
         # output as an input and tries to predict one of the 4 classes with
@@ -47,7 +47,7 @@ class BrainBehaviourClassifier(BaseModel):
         self.__lstm = torch.nn.LSTM(4, 32, batch_first=True)
         self.__linear_3 = torch.nn.Linear(32, 4)
 
-        self.__l_2 = torch.nn.CrossEntropyLoss()
+        self.__l_2 = torch.nn.BCELoss()
         self._optim = torch.optim.AdamW(self.parameters(), lr=lr, betas=adam_betas)
         self._scheduler = ExponentialLR(self._optim, gamma=lr_decay)
         self.__sample_position = 0
@@ -131,7 +131,7 @@ class BrainBehaviourClassifier(BaseModel):
         x = self.__linear_1(x)
         x = torch.relu(x)
         x = self.__linear_2(x)
-        cnn_out = torch.relu(x)
+        cnn_out = torch.sigmoid(x)
         
         # forward passing the CNN output into the LSTM and try to classify the
         # whole sequence
@@ -142,7 +142,7 @@ class BrainBehaviourClassifier(BaseModel):
         # x = torch.unsqueeze(x, 1)
 
         x = self.__linear_3(x)
-        lstm_out = torch.relu(x)
+        lstm_out = torch.sigmoid(x)
 
         # returns output of CNN and LSTM
         return cnn_out, lstm_out

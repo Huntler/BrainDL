@@ -4,8 +4,8 @@ dataset_args:
   task_dir: ./data/data/Intra
   task_type: Intra
   normalize: True
-  global_normalization: True
-  zscore_normalization: False
+  global_normalization: False
+  zscore_normalization: True
   downsampling: False
   downsample_by: 0.1
   bounds: [0, 1]
@@ -13,7 +13,7 @@ dataset_args:
   future_steps: 1
 dataloader_args:
   num_workers: 0
-  batch_size: 256
+  batch_size: 4
   shuffle: True
 train_epochs: 30
 evaluation: None 
