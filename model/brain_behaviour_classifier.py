@@ -61,11 +61,11 @@ class BrainBehaviourClassifier(BaseModel):
                 x = x.to(self._device)
                 y = y.to(self._device)
 
+                self._optim.zero_grad()
                 _y = self(x)
                 y = torch.flatten(y)
                 loss = self.__loss_func(_y, y)
 
-                self._optim.zero_grad()
                 loss.backward()
                 self._optim.step()
 
@@ -97,6 +97,18 @@ class BrainBehaviourClassifier(BaseModel):
             "Validation/loss", np.mean(losses), self.__sample_position)
 
 
+    def accuracy(self, loader: DataLoader) -> float:
+        correct = 0
+        total = 0
+        # since we're not training, we don't need to calculate the gradients for our outputs
+        with torch.no_grad():
+            for x, y in loader:
+                _y = self(x)
+                _, _y = torch.max(_y.data, 1)
+                total += y.size(0)
+                correct += (_y == y).sum().item()
+                
+        return correct * 100 // total
     
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
         batch_size, seq_size, dim_1, dim_2 = x.shape

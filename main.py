@@ -44,6 +44,8 @@ def train():
         model.learn(trainloader, epochs=5)
         model.validate(valloader)
 
+    print(f"Accuracy after training: {model.accuracy(valloader)}")
+
 
 def testing():
     # create a dummy input
