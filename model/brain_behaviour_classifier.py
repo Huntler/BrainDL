@@ -103,11 +103,13 @@ class BrainBehaviourClassifier(BaseModel):
         # since we're not training, we don't need to calculate the gradients for our outputs
         with torch.no_grad():
             for x, y in loader:
+                x = x.to(self._device)
+                y = y.to(self._device)
                 _y = self(x)
-                _, _y = torch.max(_y.data, 1)
+
                 total += y.size(0)
                 correct += (_y == y).sum().item()
-                
+
         return correct * 100 // total
     
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
@@ -117,7 +119,7 @@ class BrainBehaviourClassifier(BaseModel):
         new_x = torch.empty((batch_size, seq_size, 32, 9, 8), device=self._device)
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = self.__conv_1(x_t)
-            x_t = self.__conv_1_bn(x_t)
+            #x_t = self.__conv_1_bn(x_t)
             x_t = torch.relu(x_t)
             new_x[:, i] = x_t
 
@@ -127,7 +129,7 @@ class BrainBehaviourClassifier(BaseModel):
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = torch.flatten(x_t, 0, 1)
             x_t = self.__conv_2(x_t)
-            x_t = self.__conv_2_bn(x_t)
+            #x_t = self.__conv_2_bn(x_t)
             x_t = torch.relu(x_t)
             new_x[:, i] = x_t
 
@@ -136,7 +138,7 @@ class BrainBehaviourClassifier(BaseModel):
         for i, x_t in enumerate(x.split(1, dim=1)):
             x_t = torch.flatten(x_t, 0, 1)
             x_t = self.__conv_3(x_t)
-            x_t = self.__conv_3_bn(x_t)
+            #x_t = self.__conv_3_bn(x_t)
             x_t = torch.relu(x_t)
             new_x[:, i] = x_t
 
