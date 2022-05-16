@@ -206,6 +206,8 @@ class BrainDataset(torch.utils.data.Dataset):
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(matrix, rel_start, self._seq)
 
+        del matrix
+        
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])
         y = np.array([label], dtype=np.uint8)
