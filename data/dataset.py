@@ -84,6 +84,10 @@ class BrainDataset(torch.utils.data.Dataset):
             if self.downsampling:
                 matrix = self.downsample(matrix)
             
+            # add some noise before normalizing
+            if self._d_type == "train":
+                matrix = matrix + np.random.normal(0, .5, matrix.shape)
+
             if self.normalize:
                 matrix = self.normalize_matrix(matrix)
             
@@ -195,9 +199,6 @@ class BrainDataset(torch.utils.data.Dataset):
 
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)
-
-        if self._d_type == "train":
-            meshes = meshes + np.random.normal(0, 1, meshes.shape)
 
         x = meshes.astype(self._precision)
         y = np.array([label], dtype=np.uint8)
