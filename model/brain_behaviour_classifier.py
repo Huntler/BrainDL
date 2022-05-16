@@ -15,8 +15,8 @@ from tqdm import tqdm
 
 
 class BrainBehaviourClassifier(BaseModel):
-    def __init__(self, lr: float = 1e-3, lr_decay: float = 9e-1, 
-                 adam_betas: List[float] = [99e-2, 999e-3]) -> None:
+    def __init__(self, lr: float = 1e-3, lr_decay: float = 9e-1, dropout: float = 0.1,
+                 lstm_layers: int = 1, adam_betas: List[float] = [99e-2, 999e-3]) -> None:
         # set up tensorboard
         self.__tb_sub = datetime.now().strftime("%m-%d-%Y_%H%M%S")
         self._tb_path = f"runs/BrainBehaviourClassifier/{self.__tb_sub}"
@@ -24,8 +24,6 @@ class BrainBehaviourClassifier(BaseModel):
 
         super(BrainBehaviourClassifier, self).__init__()
         
-        dropout = 0.6
-
         # first part of the neural network is CNN only which tries to predict
         # one of the 4 classes without taking a sequence into account
         self.__cnn = torch.nn.Sequential(
@@ -45,7 +43,7 @@ class BrainBehaviourClassifier(BaseModel):
         # second part of the neural network is a LSTM which takes the previous
         # output as an input and tries to predict one of the 4 classes with
         # taking the sequence into account
-        self.__lstm = torch.nn.LSTM(24, 128, num_layers=1, dropout=dropout, bidirectional=False, batch_first=True)
+        self.__lstm = torch.nn.LSTM(24, 128, num_layers=lstm_layers, dropout=dropout, bidirectional=False, batch_first=True)
         self.__final_dense = torch.nn.Sequential(
             torch.nn.Linear(128, 64),
             torch.nn.ReLU(),

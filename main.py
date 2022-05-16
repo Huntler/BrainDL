@@ -28,7 +28,6 @@ def train():
 
     # load the data, normalize them and convert them to tensor
     dataset = BrainDataset(**config_dict["dataset_args"])
-
     split_sizes = [int(math.ceil(len(dataset) * 0.8)), int(math.floor(len(dataset) * 0.2))]
 
     trainset, valset = torch.utils.data.random_split(dataset, split_sizes)
@@ -37,18 +36,20 @@ def train():
 
     # load test dataset
     config_dict["dataset_args"]["d_type"] = "test"
+    config_dict["dataset_args"]["noise"] = False
     testset = BrainDataset(**config_dict["dataset_args"])
     testloader = DataLoader(testset, **config_dict["dataloader_args"])
 
-    # for x,y in trainloader:
-    #     pass
-    # quit()
-    model = BrainBehaviourClassifier(lr=0.0005, lr_decay=0.9)
+    # create the model
+    model = BrainBehaviourClassifier(**config_dict["model_args"])
     model.use_device(device)
 
-    # model.train(trainloader, epochs=5, two_loss_functions=True)
-    # model.validate(valloader)
+    config_dict["evaluation"] = model.log_path
+    config.store_args(f"{model.log_path}/config.yml", config_dict)
+
+    # train the model
     model.learn(loader=trainloader, validate=valloader, test=testloader, epochs=config_dict["train_epochs"])
+    model.save_to_default()
 
 
 def testing():

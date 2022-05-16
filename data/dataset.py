@@ -15,7 +15,7 @@ from .utils import get_dataset_matrix, get_file_label, get_meshes
 
 class BrainDataset(torch.utils.data.Dataset):
     def __init__(self, d_type: str = "train", normalize: bool = True, bounds: Tuple[int] = (0, 1),
-                future_steps: int= 1, sequence_length: int = 1, precision: np.dtype = np.float32,
+                noise: bool = True, sequence_length: int = 1, precision: np.dtype = np.float32,
                 task_dir: str = "./data/data/Intra", task_type: str="Intra", 
                 global_normalization: bool = True, 
                 zscore_normalization: bool = False,
@@ -24,7 +24,7 @@ class BrainDataset(torch.utils.data.Dataset):
 
         self._precision = precision
         self._seq = sequence_length
-        self._f_seq = future_steps
+        self._noise = noise
         self._d_type = d_type
 
         # Get all directories of d_type in task_dir
@@ -67,9 +67,7 @@ class BrainDataset(torch.utils.data.Dataset):
         self.length = 0
 
         # We will load all data and do the downsampling + normalization at initialization
-        self.matrices, self.labels = self.preprocess_data()
-
-        
+        self.matrices, self.labels = self.preprocess_data()      
 
     def preprocess_data(self):
         matrices = []
@@ -85,8 +83,8 @@ class BrainDataset(torch.utils.data.Dataset):
                 matrix = self.downsample(matrix)
             
             # add some noise before normalizing
-            if self._d_type == "train":
-                matrix = matrix + np.random.normal(0, .5, matrix.shape)
+            if self._noise:
+                matrix = matrix + np.random.normal(0, 1, matrix.shape)
 
             if self.normalize:
                 matrix = self.normalize_matrix(matrix)
