@@ -190,7 +190,7 @@ class BrainDataset(torch.utils.data.Dataset):
 
         length = self.matrices[0].shape[1]
         selected_matrix = self.matrices[index // length]
-        label = self.labels[0]
+        label = self.labels[index // length]
 
         # calculate the correct relative start index
         rel_start = index % (length - self._seq)

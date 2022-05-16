@@ -16,7 +16,7 @@ from tqdm import tqdm
 
 class BrainBehaviourClassifier(BaseModel):
     def __init__(self, lr: float = 1e-3, lr_decay: float = 9e-1, dropout: float = 0.1,
-                 lstm_layers: int = 1, adam_betas: List[float] = [99e-2, 999e-3]) -> None:
+                 lstm_layers: int = 1, weight_decay: float = 1e-2, adam_betas: List[float] = [99e-2, 999e-3]) -> None:
         # set up tensorboard
         self.__tb_sub = datetime.now().strftime("%m-%d-%Y_%H%M%S")
         self._tb_path = f"runs/BrainBehaviourClassifier/{self.__tb_sub}"
@@ -54,7 +54,7 @@ class BrainBehaviourClassifier(BaseModel):
         )
 
         self.__loss_func = torch.nn.CrossEntropyLoss()
-        self._optim = torch.optim.AdamW(self.parameters(), lr=lr, betas=adam_betas)
+        self._optim = torch.optim.AdamW(self.parameters(), lr=lr, betas=adam_betas, weight_decay=weight_decay)
         self._scheduler = ExponentialLR(self._optim, gamma=lr_decay)
         self.__sample_position = 0
 
