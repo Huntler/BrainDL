@@ -58,7 +58,7 @@ def get_meshes(matrix, start_index, time_steps):
     for i in range(length):
         array_time_step = np.reshape(time_matrix[:, i], (1, input_channels))
         arr_mesh = array_to_mesh(array_time_step) 
-        arr_mesh = arr_mesh + np.random.normal(0, .1, arr_mesh.shape)
+        arr_mesh = arr_mesh
 
         meshes[i,:,:] = arr_mesh
 

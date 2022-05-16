@@ -25,6 +25,7 @@ class BrainDataset(torch.utils.data.Dataset):
         self._precision = precision
         self._seq = sequence_length
         self._f_seq = future_steps
+        self._d_type = d_type
 
         # Get all directories of d_type in task_dir
         dirs = []
@@ -194,6 +195,9 @@ class BrainDataset(torch.utils.data.Dataset):
 
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)
+
+        if self._d_type == "train":
+            meshes = meshes + np.random.normal(0, 1, meshes.shape)
 
         x = meshes.astype(self._precision)
         y = np.array([label], dtype=np.uint8)
