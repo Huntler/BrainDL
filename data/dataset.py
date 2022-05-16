@@ -71,11 +71,6 @@ class BrainDataset(torch.utils.data.Dataset):
         self.matrices, self.labels = self.preprocess_data()
 
         
-        if self.length%self._seq > 0:
-            print(f"Time steps {self.time_steps} is not divisible by {self._seq}!!!")
-
-        self.length = int(self.length/self._seq)
-
         # check theory
         print(f"Iterated length  = {self.length}")
         th_length = int((len(self.files) * self.time_steps)/(self._seq))
@@ -86,9 +81,9 @@ class BrainDataset(torch.utils.data.Dataset):
         matrices = []
         labels =  []
         # Load all data into memory (if there are problems with RAM - just load them on request)
+        i = 0
         for f in self.files:
             label = get_file_label(f)
-            labels.append(label)
 
             matrix = get_dataset_matrix(f)
 
@@ -99,7 +94,26 @@ class BrainDataset(torch.utils.data.Dataset):
                 matrix = self.normalize_matrix(matrix)
             
             self.length = self.length + matrix.shape[1]
-            matrices.append(matrix)
+
+
+            if i == 0:
+                matrices.append(matrix)
+                labels.append(label)
+                i = 1
+                continue
+            
+            # find index of label in labels
+            ind = -1
+            if label in labels:
+                ind = labels.index(label)
+
+            if ind == -1:
+                matrices.append(matrix)
+                labels.append(label)
+                continue
+            
+            # stack the matrix to the appropriate label
+            matrices[ind] = np.hstack((matrices[ind], matrix))
 
         return matrices, labels
 
@@ -179,36 +193,31 @@ class BrainDataset(torch.utils.data.Dataset):
         # We return a sequence of meshes from [index,index+self._seq] from 
         # the appropriate matrix in self.matrices
 
-        # get index of matrix from which we will load data
-        mat_index = int((index * self._seq)/self.time_steps)
-        matrix = self.matrices[mat_index]
-
-        # sum of time_steps until current matrix
-        steps_to_matrix = mat_index * self.time_steps
-        current_time_step = index * self._seq
-
-        ts_index = current_time_step - steps_to_matrix
-
-        # ts_index should be between 0 and self.time_steps
-        if ts_index > self.time_steps:
-            print(f"Matrix index {mat_index}")
-            print(f"Steps to matrix {steps_to_matrix}")
-            print(f"Time steps in a single matrix: {self.time_steps}")
-
-            print(f"Index to get_item {index}")
-            print(f"Current_time_step {current_time_step}")
-            print(ts_index)
+        selected_matrix = self.matrices[0]
+        label = self.labels[0]
+        length = selected_matrix.shape[1]
+        i = 1
+        while length < index:
+            selected_matrix = self.matrices[i]
+            label = self.labels[i]
+            length = length + selected_matrix.shape[1]
+            i = i+1
         
-        # If ts_index + self._seq
-        #if (ts_index + self._seq) > self.time_steps:
-            
+        rel_start = index - length
+        matrix_length = selected_matrix.shape[1]
+
+
+        if rel_start + self._seq >= matrix_length:
+            rel_start = matrix_length - self._seq - 1
+
+
 
         # Get 2D meshes for self._seq number of time steps
-        meshes = get_meshes(matrix, ts_index, self._seq)
+        meshes = get_meshes(selected_matrix, rel_start, self._seq)
 
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])
-        y = np.array([self.labels[mat_index]], dtype=np.uint8)
+        y = np.array([label], dtype=np.uint8)
         return x, y
 
 
