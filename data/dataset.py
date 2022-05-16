@@ -188,7 +188,10 @@ class BrainDataset(torch.utils.data.Dataset):
         # the appropriate matrix in self.matrices
 
         # Get matrix index, read the matrix from file and preprocess it
-        mat_index = int(index/35624)
+        d = 35624
+        if self.downsampling:
+            d = d*(1.0 - self.downsample_by)
+        mat_index = int(index/d)
         f = self.files[mat_index]
         label = get_file_label(f)
         matrix = get_dataset_matrix(f)
