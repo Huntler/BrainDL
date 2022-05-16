@@ -61,9 +61,6 @@ def get_meshes(matrix, start_index, time_steps):
             indices.append(start_index)
     
 
-
-
-
     meshes = np.zeros((length,input_rows,input_columns),dtype=np.float64)
     for i in range(length):
         array_time_step = np.reshape(matrix[:,indices[i]],(1,input_channels))

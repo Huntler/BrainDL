@@ -63,17 +63,14 @@ class BrainDataset(torch.utils.data.Dataset):
             self.time_steps = int(self.time_steps * (1.0 - self.downsample_by))
 
         # in theory: Length = (number of files * time_steps * downsample_by)/sequence length 
-        self.length = 0
+        self.length = len(self.files) * 35624
+        if self.downsampling:
+            self.length = self.length * (1.0 - self.downsample_by)
 
         # We will load all data and do the downsampling + normalization at initialization
-        self.matrices, self.labels = self.preprocess_data()
+        #self.matrices, self.labels = self.preprocess_data()
 
         
-        # check theory
-        print(f"Iterated length  = {self.length}")
-        th_length = int((len(self.files) * self.time_steps)/(self._seq))
-        print(f"Theory length {th_length}")
-        print(f"Number of all matrices {len(self.matrices)}")
 
     def preprocess_data(self):
         matrices = []
@@ -127,7 +124,6 @@ class BrainDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return self.length
-        #return len(self.files)
 
     def normalize_globally(self,matrix):
         # Normalize all cells together throughout all time steps
@@ -191,22 +187,21 @@ class BrainDataset(torch.utils.data.Dataset):
         # We return a sequence of meshes from [index,index+self._seq] from 
         # the appropriate matrix in self.matrices
 
-        selected_matrix = self.matrices[0]
-        label = self.labels[0]
-        length = selected_matrix.shape[1]
-        i = 1
-        while length < index:
-            selected_matrix = self.matrices[i]
-            label = self.labels[i]
-            length = length + selected_matrix.shape[1]
-            i = i+1
-        
-        rel_start = index - length
-        matrix_length = selected_matrix.shape[1]
+        # Get matrix index, read the matrix from file and preprocess it
+        mat_index = int(index/35624)
+        f = self.files[mat_index]
+        label = get_file_label(f)
+        matrix = get_dataset_matrix(f)
 
+        if self.downsampling:
+            matrix = self.downsample(matrix)
+        if self.normalize:
+            matrix = self.normalize_matrix(matrix)
+        
+        rel_start = index - matrix.shape[1]
 
         # Get 2D meshes for self._seq number of time steps
-        meshes = get_meshes(selected_matrix, rel_start, self._seq)
+        meshes = get_meshes(matrix, rel_start, self._seq)
 
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])
