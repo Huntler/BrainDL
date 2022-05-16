@@ -64,7 +64,8 @@ def get_meshes(matrix, start_index, time_steps):
 
 
 def array_to_mesh(arr):
-    # got this method from here: https://github.com/SMehrkanoon/Deep-brain-state-classification-of-MEG-data/blob/c2f848bbf83ce76b4820ec56028b3571b09b7111/AA-CascadeNet_AA-MultiviewNet/reading_raw.py
+    # got this method from here: 
+    # https://github.com/SMehrkanoon/Deep-brain-state-classification-of-MEG-data/blob/c2f848bbf83ce76b4820ec56028b3571b09b7111/AA-CascadeNet_AA-MultiviewNet/reading_raw.py
 
     input_rows = 20
     input_columns = 21

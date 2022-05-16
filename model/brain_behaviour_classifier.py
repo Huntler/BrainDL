@@ -23,6 +23,8 @@ class BrainBehaviourClassifier(BaseModel):
         self._writer = SummaryWriter(self._tb_path)
 
         super(BrainBehaviourClassifier, self).__init__()
+        
+        dropout = 0.6
 
         # first part of the neural network is CNN only which tries to predict
         # one of the 4 classes without taking a sequence into account
@@ -30,11 +32,11 @@ class BrainBehaviourClassifier(BaseModel):
             torch.nn.Conv2d(1, 1, 7, 1, 0),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(1),
-            torch.nn.Dropout(0.3),
+            torch.nn.Dropout(dropout),
             torch.nn.Conv2d(1, 2, 7, 1, 0),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(2),
-            torch.nn.Dropout(0.3),
+            torch.nn.Dropout(dropout),
             torch.nn.Conv2d(2, 4, 7, 1, 0),
             torch.nn.BatchNorm2d(4),
             torch.nn.ReLU()
@@ -43,11 +45,11 @@ class BrainBehaviourClassifier(BaseModel):
         # second part of the neural network is a LSTM which takes the previous
         # output as an input and tries to predict one of the 4 classes with
         # taking the sequence into account
-        self.__lstm = torch.nn.LSTM(24, 128, num_layers=4, dropout=0.3, bidirectional=False, batch_first=True)
+        self.__lstm = torch.nn.LSTM(24, 128, num_layers=1, dropout=dropout, bidirectional=False, batch_first=True)
         self.__final_dense = torch.nn.Sequential(
             torch.nn.Linear(128, 64),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.3),
+            torch.nn.Dropout(dropout),
             torch.nn.Linear(64, 32),
             torch.nn.ReLU(),
             torch.nn.Linear(32, 4)
@@ -154,11 +156,11 @@ class BrainBehaviourClassifier(BaseModel):
 
         losses = np.array(losses)
         self._writer.add_scalar(
-            "Train/loss", np.mean(losses), self.__sample_position)
+            "Test/loss", np.mean(losses), self.__sample_position)
 
         acc_mean = accuracies / total
         self._writer.add_scalar(
-            "Train/accuracy", acc_mean, self.__sample_position)
+            "Test/accuracy", acc_mean, self.__sample_position)
 
         return acc_mean
     

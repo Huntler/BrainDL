@@ -43,7 +43,7 @@ def train():
     # for x,y in trainloader:
     #     pass
     # quit()
-    model = BrainBehaviourClassifier(lr=0.00005, lr_decay=0.9)
+    model = BrainBehaviourClassifier(lr=0.0005, lr_decay=0.9)
     model.use_device(device)
 
     # model.train(trainloader, epochs=5, two_loss_functions=True)
