@@ -65,7 +65,7 @@ class BrainDataset(torch.utils.data.Dataset):
         # in theory: Length = (number of files * time_steps * downsample_by)/sequence length 
         self.length = len(self.files) * 35624
         if self.downsampling:
-            self.length = self.length * (1.0 - self.downsample_by)
+            self.length = int(self.length * (1.0 - self.downsample_by))
 
         # We will load all data and do the downsampling + normalization at initialization
         #self.matrices, self.labels = self.preprocess_data()
@@ -188,7 +188,10 @@ class BrainDataset(torch.utils.data.Dataset):
         # the appropriate matrix in self.matrices
 
         # Get matrix index, read the matrix from file and preprocess it
-        mat_index = int(index/35624)
+        d = 35624
+        if self.downsampling:
+            d = d*(1.0 - self.downsample_by)
+        mat_index = int(index/d)
         f = self.files[mat_index]
         label = get_file_label(f)
         matrix = get_dataset_matrix(f)
@@ -201,8 +204,12 @@ class BrainDataset(torch.utils.data.Dataset):
         rel_start = index % matrix.shape[1]
         # print(rel_start, "to", rel_start + self._seq, "on matrix", mat_index)
 
+        print(matrix.shape)
+
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(matrix, rel_start, rel_start + self._seq)
+
+        del matrix
 
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])
