@@ -123,7 +123,7 @@ class BrainDataset(torch.utils.data.Dataset):
         return onehot
 
     def __len__(self):
-        return self.length
+        return int(self.length)
 
     def normalize_globally(self,matrix):
         # Normalize all cells together throughout all time steps
@@ -198,10 +198,11 @@ class BrainDataset(torch.utils.data.Dataset):
         if self.normalize:
             matrix = self.normalize_matrix(matrix)
         
-        rel_start = index - matrix.shape[1]
+        rel_start = index % matrix.shape[1]
+        # print(rel_start, "to", rel_start + self._seq, "on matrix", mat_index)
 
         # Get 2D meshes for self._seq number of time steps
-        meshes = get_meshes(matrix, rel_start, self._seq)
+        meshes = get_meshes(matrix, rel_start, rel_start + self._seq)
 
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])

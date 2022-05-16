@@ -52,8 +52,7 @@ def get_meshes(matrix, start_index, time_steps):
     indices = range(start_index,time_steps)
 
     indices = []
-    i = 0
-    while i < length:
+    for i in range(0, length):
         if (start_index + i) < matrix.shape[1]:
             indices.append(start_index + 1)
         else:
