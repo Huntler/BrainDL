@@ -63,12 +63,10 @@ class BrainDataset(torch.utils.data.Dataset):
             self.time_steps = int(self.time_steps * (1.0 - self.downsample_by))
 
         # in theory: Length = (number of files * time_steps * downsample_by)/sequence length 
-        self.length = len(self.files) * 35624
-        if self.downsampling:
-            self.length = int(self.length * (1.0 - self.downsample_by))
+        self.length = 0
 
         # We will load all data and do the downsampling + normalization at initialization
-        #self.matrices, self.labels = self.preprocess_data()
+        self.matrices, self.labels = self.preprocess_data()
 
         
 
@@ -187,29 +185,20 @@ class BrainDataset(torch.utils.data.Dataset):
         # We return a sequence of meshes from [index,index+self._seq] from 
         # the appropriate matrix in self.matrices
 
-        # Get matrix index, read the matrix from file and preprocess it
-        d = 35624
-        if self.downsampling:
-            d = d*(1.0 - self.downsample_by)
-        mat_index = int(index/d)
-        f = self.files[mat_index]
-        label = get_file_label(f)
-        matrix = get_dataset_matrix(f)
+        selected_matrix = self.matrices[0]
+        label = self.labels[0]
+        length = selected_matrix.shape[1]
+        i = 1
+        while length < index:
+            selected_matrix = self.matrices[i]
+            label = self.labels[i]
+            length = length + selected_matrix.shape[1]
+            i = i+1
 
-        if self.downsampling:
-            matrix = self.downsample(matrix)
-        if self.normalize:
-            matrix = self.normalize_matrix(matrix)
-        
-        rel_start = index % matrix.shape[1]
-        # print(rel_start, "to", rel_start + self._seq, "on matrix", mat_index)
-
-        print(matrix.shape)
+        rel_start = index - length
 
         # Get 2D meshes for self._seq number of time steps
-        meshes = get_meshes(matrix, rel_start, rel_start + self._seq)
-
-        del matrix
+        meshes = get_meshes(selected_matrix, rel_start, self._seq)
 
         x = meshes.astype(self._precision)
         # y = self.__onehot_ecnode(self.labels[mat_index])
