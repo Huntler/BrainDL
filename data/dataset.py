@@ -188,6 +188,7 @@ class BrainDataset(torch.utils.data.Dataset):
         selected_matrix = self.matrices[0]
         label = self.labels[0]
         length = selected_matrix.shape[1]
+
         i = 1
         while length < index:
             selected_matrix = self.matrices[i]
@@ -195,13 +196,13 @@ class BrainDataset(torch.utils.data.Dataset):
             length = length + selected_matrix.shape[1]
             i = i+1
 
-        rel_start = index - length
+        # calculate the correct relative start index
+        rel_start = index % selected_matrix.shape[1]
 
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)
 
         x = meshes.astype(self._precision)
-        # y = self.__onehot_ecnode(self.labels[mat_index])
         y = np.array([label], dtype=np.uint8)
         return x, y
 
