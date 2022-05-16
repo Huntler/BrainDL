@@ -189,12 +189,15 @@ class BrainDataset(torch.utils.data.Dataset):
         label = self.labels[0]
         length = selected_matrix.shape[1]
 
-        i = 1
-        while length < index:
+        # used for loop instead of while which is much faster due to 
+        # underlying c++
+        for i in range(1, len(self.matrices)):
             selected_matrix = self.matrices[i]
             label = self.labels[i]
             length = length + selected_matrix.shape[1]
-            i = i+1
+
+            if length < index:
+                break
 
         # calculate the correct relative start index
         rel_start = index % selected_matrix.shape[1]
