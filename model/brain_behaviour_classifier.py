@@ -29,11 +29,14 @@ class BrainBehaviourClassifier(BaseModel):
         self.__cnn = torch.nn.Sequential(
             torch.nn.Conv2d(1, 1, 7, 1, 0),
             torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(1),
             torch.nn.Dropout(0.3),
             torch.nn.Conv2d(1, 2, 7, 1, 0),
             torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(2),
             torch.nn.Dropout(0.3),
             torch.nn.Conv2d(2, 4, 7, 1, 0),
+            torch.nn.BatchNorm2d(4),
             torch.nn.ReLU()
         )
 
@@ -133,6 +136,7 @@ class BrainBehaviourClassifier(BaseModel):
         self.eval()
         accuracies = 0
         total = 0
+        losses = []
         # since we're not training, we don't need to calculate the gradients for our outputs
         with torch.no_grad():
             for x, y in loader:
@@ -140,13 +144,23 @@ class BrainBehaviourClassifier(BaseModel):
                 y = y.to(self._device)
 
                 _y = self(x)
+                loss = self.__loss_func(_y, torch.flatten(y))
+                losses.append(loss.detach().cpu().item())
 
                 acc = self._single_accuracy(_y, y)
                 accuracies += acc
                 total += 1
+            
+
+        losses = np.array(losses)
+        self._writer.add_scalar(
+            "Train/loss", np.mean(losses), self.__sample_position)
 
         acc_mean = accuracies / total
-        return np.mean(acc_mean)
+        self._writer.add_scalar(
+            "Train/accuracy", acc_mean, self.__sample_position)
+
+        return acc_mean
     
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
         batch_size, seq_size, dim_1, dim_2 = x.shape

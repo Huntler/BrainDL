@@ -1,19 +1,19 @@
 device: cuda
 dataset_args:
   d_type: train
-  task_dir: ./data/data/Intra
-  task_type: Intra
+  task_dir: ./data/data/Cross
+  task_type: Cross
   normalize: True
   global_normalization: False
   zscore_normalization: True
-  downsampling: False
-  downsample_by: 0.5
+  downsampling: True
+  downsample_by: 0.8
   bounds: [0, 1]
-  sequence_length: 4
+  sequence_length: 10
   future_steps: 1
 dataloader_args:
   num_workers: 16
-  batch_size: 128
+  batch_size: 2048
   shuffle: True
-train_epochs: 50
+train_epochs: 5
 evaluation: None 
