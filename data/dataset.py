@@ -207,11 +207,6 @@ class BrainDataset(torch.utils.data.Dataset):
         matrix_length = selected_matrix.shape[1]
 
 
-        if rel_start + self._seq >= matrix_length:
-            rel_start = matrix_length - self._seq - 1
-
-
-
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)
 
