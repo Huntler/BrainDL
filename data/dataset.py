@@ -194,13 +194,13 @@ class BrainDataset(torch.utils.data.Dataset):
         for i in range(1, len(self.matrices)):
             selected_matrix = self.matrices[i]
             label = self.labels[i]
-            length = length + selected_matrix.shape[1]
+            length = length + selected_matrix.shape[1] - self._seq
 
             if length < index:
                 break
 
         # calculate the correct relative start index
-        rel_start = index % selected_matrix.shape[1]
+        rel_start = index % (selected_matrix.shape[1] - self._seq)
 
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)

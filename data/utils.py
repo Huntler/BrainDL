@@ -49,24 +49,22 @@ def get_meshes(matrix, start_index, time_steps):
     length = time_steps
     input_channels = 248
 
-    indices = []
-    for i in range(0, length):
-        if (start_index + i) < matrix.shape[1]:
-            indices.append(start_index + i)
-        else:
-            start_index = 0
-            indices.append(start_index)
-    
+    # get the time frame of our matrix
+    end_index = start_index+time_steps
+    time_matrix = matrix[:, start_index:end_index]
 
-    meshes = np.zeros((length,input_rows,input_columns),dtype=np.float64)
+    # transform each matrix to the mesh
+    meshes = np.zeros((length, input_rows, input_columns), dtype=np.float32)
     for i in range(length):
-        array_time_step = np.reshape(matrix[:,indices[i]],(1,input_channels))
+        array_time_step = np.reshape(time_matrix[:, i], (1, input_channels))
         arr_mesh = array_to_mesh(array_time_step)
         meshes[i,:,:] = arr_mesh
+
     return meshes
 
 
-def array_to_mesh(arr):    
+def array_to_mesh(arr):
+    # got this method from here: https://github.com/SMehrkanoon/Deep-brain-state-classification-of-MEG-data/blob/c2f848bbf83ce76b4820ec56028b3571b09b7111/AA-CascadeNet_AA-MultiviewNet/reading_raw.py
 
     input_rows = 20
     input_columns = 21
