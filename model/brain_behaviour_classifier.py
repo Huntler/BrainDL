@@ -29,8 +29,10 @@ class BrainBehaviourClassifier(BaseModel):
         self.__cnn = torch.nn.Sequential(
             torch.nn.Conv2d(1, 1, 7, 1, 0),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Conv2d(1, 2, 7, 1, 0),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Conv2d(2, 4, 7, 1, 0),
             torch.nn.ReLU()
         )
@@ -38,10 +40,11 @@ class BrainBehaviourClassifier(BaseModel):
         # second part of the neural network is a LSTM which takes the previous
         # output as an input and tries to predict one of the 4 classes with
         # taking the sequence into account
-        self.__lstm = torch.nn.LSTM(24, 128, num_layers=4, dropout=0.2, bidirectional=False, batch_first=True)
+        self.__lstm = torch.nn.LSTM(24, 128, num_layers=4, dropout=0.3, bidirectional=False, batch_first=True)
         self.__final_dense = torch.nn.Sequential(
             torch.nn.Linear(128, 64),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Linear(64, 32),
             torch.nn.ReLU(),
             torch.nn.Linear(32, 4)
@@ -127,7 +130,9 @@ class BrainBehaviourClassifier(BaseModel):
         return acc.detach().cpu().item()
 
     def accuracy(self, loader: DataLoader) -> float:
-        accuracies = []
+        self.eval()
+        accuracies = 0
+        total = 0
         # since we're not training, we don't need to calculate the gradients for our outputs
         with torch.no_grad():
             for x, y in loader:
@@ -137,9 +142,10 @@ class BrainBehaviourClassifier(BaseModel):
                 _y = self(x)
 
                 acc = self._single_accuracy(_y, y)
-                accuracies.append(acc)
+                accuracies += acc
+                total += 1
 
-        acc_mean = np.array(accuracies)
+        acc_mean = accuracies / total
         return np.mean(acc_mean)
     
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
