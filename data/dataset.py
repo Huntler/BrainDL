@@ -185,22 +185,12 @@ class BrainDataset(torch.utils.data.Dataset):
         # We return a sequence of meshes from [index,index+self._seq] from 
         # the appropriate matrix in self.matrices
 
-        selected_matrix = self.matrices[0]
+        length = self.matrices[0].shape[1]
+        selected_matrix = self.matrices[index // length]
         label = self.labels[0]
-        length = selected_matrix.shape[1]
-
-        # used for loop instead of while which is much faster due to 
-        # underlying c++
-        for i in range(1, len(self.matrices)):
-            selected_matrix = self.matrices[i]
-            label = self.labels[i]
-            length = length + selected_matrix.shape[1] - self._seq
-
-            if length < index:
-                break
 
         # calculate the correct relative start index
-        rel_start = index % (selected_matrix.shape[1] - self._seq)
+        rel_start = index % (length - self._seq)
 
         # Get 2D meshes for self._seq number of time steps
         meshes = get_meshes(selected_matrix, rel_start, self._seq)
