@@ -42,8 +42,6 @@ class BrainDataset(torch.utils.data.Dataset):
                 p = os.path.join(d,f)
                 self.files.append(os.path.abspath(p))
 
-
-
         self.normalize = normalize
         self.global_normalization = global_normalization
         self.zscore_normalization = zscore_normalization

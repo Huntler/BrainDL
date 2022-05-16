@@ -35,15 +35,13 @@ def train():
     trainloader = DataLoader(trainset, **config_dict["dataloader_args"])
     valloader = DataLoader(valset, **config_dict["dataloader_args"])
 
-    model = BrainBehaviourClassifier()
+    model = BrainBehaviourClassifier(lr=0.003, lr_decay=0.99)
     model.use_device(device)
+    model.accuracy(valloader)
 
     # model.train(trainloader, epochs=5, two_loss_functions=True)
     # model.validate(valloader)
-    for i in range(3):
-        model.learn(trainloader, epochs=5)
-        model.validate(valloader)
-        print(f"Accuracy after training: {model.accuracy(valloader)}")
+    model.learn(loader=trainloader, validate=valloader, epochs=config_dict["train_epochs"])
 
 
 def testing():
