@@ -74,6 +74,8 @@ class BrainBehaviourClassifier(BaseModel):
 
                 self._writer.add_scalar(
                     "Train/loss", loss, self.__sample_position)
+                self._writer.add_scalar(
+                    "Train/accuracy", self._single_accuracy(_y, y), self.__sample_position)
 
                 self.__sample_position += x.size(0)
 
@@ -94,6 +96,7 @@ class BrainBehaviourClassifier(BaseModel):
 
     def validate(self, loader: DataLoader) -> None:
         losses = []
+        accuracies = []
         # since we're not training, we don't need to calculate the gradients for our outputs
         with torch.no_grad():
             for x, y in loader:
@@ -104,25 +107,40 @@ class BrainBehaviourClassifier(BaseModel):
                 y = torch.flatten(y)
                 loss = self.__loss_func(_y, y)
                 losses.append(loss.detach().cpu().item())
+                accuracies.append(self._single_accuracy(_y, y))
 
         losses = np.array(losses)
         self._writer.add_scalar(
             "Validation/loss", np.mean(losses), self.__sample_position)
 
+        accuracies = np.array(accuracies)
+        self._writer.add_scalar(
+            "Validation/accuracy", np.mean(accuracies), self.__sample_position)
+
+    def _single_accuracy(self, pred_y, test_y) -> float:
+        y_pred_softmax = torch.log_softmax(pred_y, dim = 1)
+        _, y_pred_tags = torch.max(y_pred_softmax, dim = 1)    
+
+        correct_pred = (y_pred_tags == torch.flatten(test_y)).float()
+        acc = correct_pred.sum() / len(correct_pred)
+        acc = torch.round(acc * 100)
+        return acc.detach().cpu().item()
+
     def accuracy(self, loader: DataLoader) -> float:
-        correct = 0
-        total = 0
+        accuracies = []
         # since we're not training, we don't need to calculate the gradients for our outputs
         with torch.no_grad():
             for x, y in loader:
                 x = x.to(self._device)
                 y = y.to(self._device)
+
                 _y = self(x)
 
-                total += y.size(0)
-                correct += (_y == y).sum().item()
+                acc = self._single_accuracy(_y, y)
+                accuracies.append(acc)
 
-        return correct * 100 // total
+        acc_mean = np.array(accuracies)
+        return np.mean(acc_mean)
     
     def forward(self, x: torch.tensor) -> Tuple[torch.tensor]:
         batch_size, seq_size, dim_1, dim_2 = x.shape

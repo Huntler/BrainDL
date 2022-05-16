@@ -6,10 +6,10 @@ dataset_args:
   normalize: True
   global_normalization: False
   zscore_normalization: True
-  downsampling: True
+  downsampling: False
   downsample_by: 0.5
   bounds: [0, 1]
-  sequence_length: 32
+  sequence_length: 4
   future_steps: 1
 dataloader_args:
   num_workers: 16
